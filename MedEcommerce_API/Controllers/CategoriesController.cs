@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MedEcommerce_DB;
+using MedEcommerce_Core;
 
 namespace MedEcommerce_API.Controllers
 {
@@ -14,40 +15,34 @@ namespace MedEcommerce_API.Controllers
     [ApiController]
     public class CategoriesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly ICategoriesService _categoriesService;
 
-        public CategoriesController(ApplicationDbContext context)
+        public CategoriesController(ICategoriesService categoriesService)
         {
-            _context = context;
+            _categoriesService = categoriesService;
         }
 
         // GET: api/Categories
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
-          if (_context.Categories == null)
-          {
-              return NotFound();
-          }
-            return await _context.Categories.ToListAsync();
+          var categories = await _categoriesService.GetCategoriesAsync();
+            return Ok(categories);
         }
 
         // GET: api/Categories/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Category>> GetCategory(int id)
         {
-          if (_context.Categories == null)
-          {
-              return NotFound();
-          }
-            var category = await _context.Categories.FindAsync(id);
+         
+            var category = await _categoriesService.GetCategoryByIdAsync(id);
 
             if (category == null)
             {
                 return NotFound();
             }
 
-            return category;
+            return Ok(category);
         }
 
         // PUT: api/Categories/5
@@ -60,31 +55,15 @@ namespace MedEcommerce_API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(category).State = EntityState.Modified;
+            var updatedCategory = await _categoriesService.UpdateCategoryAsync(id, category);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!CategoryExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            var cat = await _context.Categories.FindAsync(id);
-            if (cat == null)
+            if(updatedCategory == null)
             {
                 return NotFound();
             }
 
-            return cat;
+            return Ok(updatedCategory);
+
         }
 
         // POST: api/Categories
@@ -92,39 +71,24 @@ namespace MedEcommerce_API.Controllers
         [HttpPost]
         public async Task<ActionResult<Category>> PostCategory(Category category)
         {
-          if (_context.Categories == null)
-          {
-              return Problem("Entity set 'ApplicationDbContext.Categories'  is null.");
-          }
-            _context.Categories.Add(category);
-            await _context.SaveChangesAsync();
+          var cat = await _categoriesService.CreateCategoryAsync(category);
 
-            return CreatedAtAction("GetCategory", new { id = category.Id }, category);
+          return CreatedAtAction("GetCategory", new { id = cat.Id }, cat);
         }
 
         // DELETE: api/Categories/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCategory(int id)
         {
-            if (_context.Categories == null)
+            var result = await _categoriesService.DeleteCategoryAsync(id);
+            if (!result)
             {
                 return NotFound();
             }
-            var category = await _context.Categories.FindAsync(id);
-            if (category == null)
-            {
-                return NotFound();
-            }
-
-            _context.Categories.Remove(category);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool CategoryExists(int id)
-        {
-            return (_context.Categories?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
+        
     }
 }

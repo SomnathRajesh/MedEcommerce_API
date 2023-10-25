@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MedEcommerce_DB;
+using MedEcommerce_Core;
 
 namespace MedEcommerce_API.Controllers
 {
@@ -13,40 +14,31 @@ namespace MedEcommerce_API.Controllers
     [ApiController]
     public class MedicinesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IMedicineService  _medicineService;
 
-        public MedicinesController(ApplicationDbContext context)
+        public MedicinesController(IMedicineService medicineService)
         {
-            _context = context;
+            _medicineService = medicineService;
         }
 
         // GET: api/Medicines
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Medicine>>> GetMedicines()
         {
-          if (_context.Medicines == null)
-          {
-              return NotFound();
-          }
-            return await _context.Medicines.Include(c=>c.Category).ToListAsync();
+          var medicines = await _medicineService.GetMedicinesAsync();
+            return Ok(medicines);
         }
 
         // GET: api/Medicines/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Medicine>> GetMedicine(int id)
         {
-          if (_context.Medicines == null)
-          {
-              return NotFound();
-          }
-            var medicine = await _context.Medicines.Include(c => c.Category).Where(m=>m.Id==id).FirstOrDefaultAsync();
-
-            if (medicine == null)
+          var medicine = await _medicineService.GetMedicineByIdAsync(id);
+            if(medicine == null)
             {
                 return NotFound();
             }
-
-            return medicine;
+            return Ok(medicine);
         }
 
         // PUT: api/Medicines/5
@@ -59,31 +51,13 @@ namespace MedEcommerce_API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(medicine).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MedicineExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            var med = await _context.Medicines.Include(c => c.Category).Where(m => m.Id == id).FirstOrDefaultAsync();
-            if (med == null)
+            var updatedMed = await _medicineService.UpdateMedicineAsync(id, medicine);
+            if (updatedMed == null)
             {
                 return NotFound();
             }
 
-            return med;
+            return Ok(updatedMed);
         }
 
         // POST: api/Medicines
@@ -91,40 +65,24 @@ namespace MedEcommerce_API.Controllers
         [HttpPost]
         public async Task<ActionResult<Medicine>> PostMedicine(Medicine medicine)
         {
-          if (_context.Medicines == null)
-          {
-              return Problem("Entity set 'ApplicationDbContext.Medicines'  is null.");
-          }
-            _context.Medicines.Add(medicine);
-            await _context.SaveChangesAsync();
-            var med = await _context.Medicines.Include(c => c.Category).Where(m => m.Name == medicine.Name).FirstOrDefaultAsync();
+            var med = await _medicineService.CreateMedicineAsync(medicine);
 
-            return CreatedAtAction("GetMedicine", new { id = medicine.Id }, med);
+            return CreatedAtAction("GetMedicine", new { id = med.Id }, med);
         }
 
         // DELETE: api/Medicines/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMedicine(int id)
         {
-            if (_context.Medicines == null)
+            var result = await _medicineService.DeleteMedicineAsync(id);
+            if (!result)
             {
                 return NotFound();
             }
-            var medicine = await _context.Medicines.FindAsync(id);
-            if (medicine == null)
-            {
-                return NotFound();
-            }
-
-            _context.Medicines.Remove(medicine);
-            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool MedicineExists(int id)
-        {
-            return (_context.Medicines?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
+        
     }
 }

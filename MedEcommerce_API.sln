@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MedEcommerce_DB", "MedEcomm
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MedEcommerce_Core", "MedEcommerce_Core\MedEcommerce_Core.csproj", "{451B1025-0CF8-4E47-94F6-42CD304713CC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MedEcommerce_API_Tests", "MedEcommerce_API_Tests\MedEcommerce_API_Tests.csproj", "{22F1263E-93D1-4F17-ADC6-77D3047C89FC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{451B1025-0CF8-4E47-94F6-42CD304713CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{451B1025-0CF8-4E47-94F6-42CD304713CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{451B1025-0CF8-4E47-94F6-42CD304713CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{22F1263E-93D1-4F17-ADC6-77D3047C89FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{22F1263E-93D1-4F17-ADC6-77D3047C89FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{22F1263E-93D1-4F17-ADC6-77D3047C89FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{22F1263E-93D1-4F17-ADC6-77D3047C89FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MedEcommerce_DB;
+using MedEcommerce_Core;
 
 namespace MedEcommerce_API.Controllers
 {
@@ -13,40 +14,34 @@ namespace MedEcommerce_API.Controllers
     [ApiController]
     public class AddressesController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IAddressService   _addressService;
 
-        public AddressesController(ApplicationDbContext context)
+        public AddressesController(IAddressService addressService)
         {
-            _context = context;
+            _addressService = addressService;
         }
 
         // GET: api/Addresses
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Address>>> GetAddresses()
         {
-          if (_context.Addresses == null)
-          {
-              return NotFound();
-          }
-            return await _context.Addresses.ToListAsync();
+          var addresses = await _addressService.GetAddressesAsync();
+            return Ok(addresses);
         }
 
         // GET: api/Addresses/5
         [HttpGet("{id}")]
         public async Task<ActionResult<IEnumerable<Address>>> GetAddress(int id)
         {
-          if (_context.Addresses == null)
-          {
-              return NotFound();
-          }
-            var address = await _context.Addresses.Where(u=>u.UserId == id).ToListAsync();
+          
+            var address = await _addressService.GetAddressesByIdAsync(id);
 
             if (address == null)
             {
                 return NotFound();
             }
 
-            return address;
+            return Ok(address);
         }
 
         // PUT: api/Addresses/5
@@ -59,30 +54,12 @@ namespace MedEcommerce_API.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(address).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AddressExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            var add = await _context.Addresses.FindAsync(id);
-            if (add == null)
+            var updatedAdd = await _addressService.UpdateAddressAsync(id,address);
+            if (updatedAdd == null)
             {
                 return BadRequest();
             }
-            return add;
+            return Ok(updatedAdd);
         }
 
         // POST: api/Addresses
@@ -90,39 +67,22 @@ namespace MedEcommerce_API.Controllers
         [HttpPost]
         public async Task<ActionResult<Address>> PostAddress(Address address)
         {
-          if (_context.Addresses == null)
-          {
-              return Problem("Entity set 'ApplicationDbContext.Addresses'  is null.");
-          }
-            _context.Addresses.Add(address);
-            await _context.SaveChangesAsync();
+          var add = await _addressService.CreateAddressAsync(address);
 
-            return CreatedAtAction("GetAddress", new { id = address.Id }, address);
+            return CreatedAtAction("PostAddress", new { id = add.Id }, add);
         }
 
         // DELETE: api/Addresses/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAddress(int id)
         {
-            if (_context.Addresses == null)
+            var result = await _addressService.DeleteAddressAsync(id);
+            if(!result)
             {
                 return NotFound();
             }
-            var address = await _context.Addresses.FindAsync(id);
-            if (address == null)
-            {
-                return NotFound();
-            }
-
-            _context.Addresses.Remove(address);
-            await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        private bool AddressExists(int id)
-        {
-            return (_context.Addresses?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }
